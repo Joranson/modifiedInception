@@ -220,11 +220,14 @@ def train(target, dataset, cluster_spec):
         if grad is not None:
           tf.histogram_summary(var.op.name + '/gradients', grad)
 
-      with tf.control_dependencies([tf.py_func(timer, ["before apply_gradients_op  "], tf.bool)]):
+      dummy1 = tf.py_func(timer, ["before apply_gradients_op  "], tf.bool)
+      dummy2 = tf.py_func(timer, ["finished apply_gradients_op"], tf.bool)
+
+      with tf.control_dependencies([dummy1]):
         apply_gradients_op = opt.apply_gradients(grads, global_step=global_step)
 
         with tf.control_dependencies([apply_gradients_op]):
-          with tf.control_dependencies([tf.py_func(timer, ["finished apply_gradients_op"], tf.bool)]):
+          with tf.control_dependencies([dummy2]):
             train_op = tf.identity(total_loss, name='train_op')
 
       # Get chief queue_runners, init_tokens and clean_up_op, which is used to
