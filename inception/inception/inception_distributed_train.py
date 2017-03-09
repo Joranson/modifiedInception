@@ -230,11 +230,14 @@ def train(target, dataset, cluster_spec):
       #       train_op = tf.identity(total_loss, name='train_op')
 
       apply_gradients_op = opt.apply_gradients(grads, global_step=global_step)
-      apply_gradients_op = tf.Print(apply_gradients_op, [timer("before apply_gradients_op  ")])
+
+      t1 = tf.py_func(timer, ["before apply_gradients_op  "], tf.string)
+      t2 = tf.py_func(timer, ["finished apply_gradients_op"], tf.string)
+      apply_gradients_op = tf.Print(apply_gradients_op, [t1])
 
       with tf.control_dependencies([apply_gradients_op]):
         train_op = tf.identity(total_loss, name='train_op')
-        train_op = tf.Print(train_op, [timer("finished apply_gradients_op")])
+        train_op = tf.Print(train_op, [t2])
 
       # Get chief queue_runners, init_tokens and clean_up_op, which is used to
       # synchronize replicas.
