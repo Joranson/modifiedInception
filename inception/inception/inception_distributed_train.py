@@ -86,8 +86,12 @@ RMSPROP_DECAY = 0.9                # Decay term for RMSProp.
 RMSPROP_MOMENTUM = 0.9             # Momentum in RMSProp.
 RMSPROP_EPSILON = 1.0              # Epsilon term for RMSProp.
 
+# def timer(s):
+#   return ("----------------- "+ s +datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S.%f'))
+
 def timer(s):
-  return ("----------------- "+ s +datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S.%f'))
+  print ("----------------- ", s, datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S.%f'))
+  return False
 
 def train(target, dataset, cluster_spec):
   """Train Inception on a dataset for a number of steps."""
@@ -219,25 +223,25 @@ def train(target, dataset, cluster_spec):
         if grad is not None:
           tf.histogram_summary(var.op.name + '/gradients', grad)
 
-      # dummy1 = tf.py_func(timer, ["before apply_gradients_op  "], tf.bool)
-      # dummy2 = tf.py_func(timer, ["finished apply_gradients_op"], tf.bool)
+      dummy1 = tf.py_func(timer, ["before apply_gradients_op  "], tf.bool)
+      dummy2 = tf.py_func(timer, ["finished apply_gradients_op"], tf.bool)
 
-      # with tf.control_dependencies([dummy1]):
-      #   apply_gradients_op = opt.apply_gradients(grads, global_step=global_step)
+      with tf.control_dependencies([dummy1]):
+        apply_gradients_op = opt.apply_gradients(grads, global_step=global_step)
 
-      #   with tf.control_dependencies([apply_gradients_op]):
-      #     with tf.control_dependencies([dummy2]):
-      #       train_op = tf.identity(total_loss, name='train_op')
+        with tf.control_dependencies([apply_gradients_op]):
+          with tf.control_dependencies([dummy2]):
+            train_op = tf.identity(total_loss, name='train_op')
 
-      apply_gradients_op = opt.apply_gradients(grads, global_step=global_step)
+      # apply_gradients_op = opt.apply_gradients(grads, global_step=global_step)
 
-      t1 = tf.py_func(timer, ["before apply_gradients_op  "], tf.string)
-      t2 = tf.py_func(timer, ["finished apply_gradients_op"], tf.string)
-      apply_gradients_op = tf.Print(apply_gradients_op, [t1])
+      # t1 = tf.py_func(timer, ["before apply_gradients_op  "], tf.string)
+      # t2 = tf.py_func(timer, ["finished apply_gradients_op"], tf.string)
+      # apply_gradients_op = tf.Print(apply_gradients_op, [t1])
 
-      with tf.control_dependencies([apply_gradients_op]):
-        train_op = tf.identity(total_loss, name='train_op')
-        train_op = tf.Print(train_op, [t2])
+      # with tf.control_dependencies([apply_gradients_op]):
+      #   train_op = tf.identity(total_loss, name='train_op')
+      #   train_op = tf.Print(train_op, [t2])
 
       # Get chief queue_runners, init_tokens and clean_up_op, which is used to
       # synchronize replicas.
