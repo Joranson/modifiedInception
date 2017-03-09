@@ -87,7 +87,7 @@ RMSPROP_MOMENTUM = 0.9             # Momentum in RMSProp.
 RMSPROP_EPSILON = 1.0              # Epsilon term for RMSProp.
 
 def timer(s):
-  return ("----------------- ", s, datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S.%f'))
+  return ("----------------- "+ s +datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S.%f'))
 
 def train(target, dataset, cluster_spec):
   """Train Inception on a dataset for a number of steps."""
