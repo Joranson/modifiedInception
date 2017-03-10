@@ -31,6 +31,8 @@ from inception import image_processing
 from inception import inception_model as inception
 from inception.slim import slim
 
+from tensorflow.python.client import timeline
+
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string('job_name', '', 'One of "ps", "worker"')
@@ -46,7 +48,7 @@ tf.app.flags.DEFINE_string('worker_hosts', '',
 tf.app.flags.DEFINE_string('train_dir', '/tmp/imagenet_train',
                            """Directory where to write event logs """
                            """and checkpoint.""")
-tf.app.flags.DEFINE_integer('max_steps', 1000000, 'Number of batches to run.')
+tf.app.flags.DEFINE_integer('max_steps', 30, 'Number of batches to run.')
 tf.app.flags.DEFINE_string('subset', 'train', 'Either "train" or "validation".')
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             'Whether to log device placement.')
@@ -86,12 +88,6 @@ RMSPROP_DECAY = 0.9                # Decay term for RMSProp.
 RMSPROP_MOMENTUM = 0.9             # Momentum in RMSProp.
 RMSPROP_EPSILON = 1.0              # Epsilon term for RMSProp.
 
-# def timer(s):
-#   return ("----------------- "+ s +datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S.%f'))
-
-def timer(s):
-  print ("----------------- ", s, datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S.%f'))
-  return False
 
 def train(target, dataset, cluster_spec):
   """Train Inception on a dataset for a number of steps."""
@@ -223,25 +219,10 @@ def train(target, dataset, cluster_spec):
         if grad is not None:
           tf.histogram_summary(var.op.name + '/gradients', grad)
 
-      dummy1 = tf.py_func(timer, ["before apply_gradients_op  "], tf.bool)
-      dummy2 = tf.py_func(timer, ["finished apply_gradients_op"], tf.bool)
+      apply_gradients_op = opt.apply_gradients(grads, global_step=global_step)
 
-      with tf.control_dependencies([dummy1]):
-        apply_gradients_op = opt.apply_gradients(grads, global_step=global_step)
-
-        with tf.control_dependencies([apply_gradients_op]):
-          with tf.control_dependencies([dummy2]):
-            train_op = tf.identity(total_loss, name='train_op')
-
-      # apply_gradients_op = opt.apply_gradients(grads, global_step=global_step)
-
-      # t1 = tf.py_func(timer, ["before apply_gradients_op  "], tf.string)
-      # t2 = tf.py_func(timer, ["finished apply_gradients_op"], tf.string)
-      # apply_gradients_op = tf.Print(apply_gradients_op, [t1])
-
-      # with tf.control_dependencies([apply_gradients_op]):
-      #   train_op = tf.identity(total_loss, name='train_op')
-      #   train_op = tf.Print(train_op, [t2])
+      with tf.control_dependencies([apply_gradients_op]):
+        train_op = tf.identity(total_loss, name='train_op')
 
       # Get chief queue_runners, init_tokens and clean_up_op, which is used to
       # synchronize replicas.
@@ -257,7 +238,7 @@ def train(target, dataset, cluster_spec):
       summary_op = tf.merge_all_summaries()
 
       # Build an initialization operation to run below.
-      init_op = tf.initialize_all_variables()
+      init_op = tf.global_variables_initializer()
 
       # We run the summaries in the same thread as the training operations by
       # passing in None for summary_op to avoid a summary_thread being started.
@@ -296,11 +277,22 @@ def train(target, dataset, cluster_spec):
       next_summary_time = time.time() + FLAGS.save_summaries_secs
       while not sv.should_stop():
         try:
+          # Run the graph with full trace option
+          run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+          run_metadata = tf.RunMetadata()
           start_time = time.time()
-          loss_value, step = sess.run([train_op, global_step])
+          loss_value, step = sess.run([train_op, global_step], options=run_options, run_metadata=run_metadata)
+
           assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
           if step > FLAGS.max_steps:
             break
+
+          # Create the Timeline object, and write it to a json
+          tl = timeline.Timeline(run_metadata.step_stats)
+          ctf = tl.generate_chrome_trace_format()
+          with open('timeline_'+str(step)+'.json', 'w') as f:
+              f.write(ctf)
+
           duration = time.time() - start_time
 
           if step % 1 == 0:
