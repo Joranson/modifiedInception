@@ -219,7 +219,9 @@ def train(target, dataset, cluster_spec):
         if grad is not None:
           tf.histogram_summary(var.op.name + '/gradients', grad)
 
+      grads = tf.identity(grads, name='before_apply_grads')
       apply_gradients_op = opt.apply_gradients(grads, global_step=global_step)
+      apply_gradients_op = tf.identity(apply_gradients_op, name='finish_apply_grads')
 
       with tf.control_dependencies([apply_gradients_op]):
         train_op = tf.identity(total_loss, name='train_op')
