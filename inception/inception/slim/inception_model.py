@@ -85,6 +85,7 @@ def inception_v3(inputs,
         # 299 x 299 x 3
         end_points['conv0'] = ops.conv2d(inputs, 32, [3, 3], stride=2,
                                          scope='conv0')
+        
         # 149 x 149 x 32
         end_points['conv1'] = ops.conv2d(end_points['conv0'], 32, [3, 3],
                                          scope='conv1')
@@ -140,6 +141,7 @@ def inception_v3(inputs,
             branch_pool = ops.conv2d(branch_pool, 64, [1, 1])
           net = tf.concat(3, [branch1x1, branch5x5, branch3x3dbl, branch_pool])
           end_points['mixed_35x35x288a'] = net
+        '''
         # mixed_2: 35 x 35 x 288.
         with tf.variable_scope('mixed_35x35x288b'):
           with tf.variable_scope('branch1x1'):
@@ -156,6 +158,8 @@ def inception_v3(inputs,
             branch_pool = ops.conv2d(branch_pool, 64, [1, 1])
           net = tf.concat(3, [branch1x1, branch5x5, branch3x3dbl, branch_pool])
           end_points['mixed_35x35x288b'] = net
+        '''
+
         # mixed_3: 17 x 17 x 768.
         with tf.variable_scope('mixed_17x17x768a'):
           with tf.variable_scope('branch3x3'):
@@ -188,6 +192,7 @@ def inception_v3(inputs,
             branch_pool = ops.conv2d(branch_pool, 192, [1, 1])
           net = tf.concat(3, [branch1x1, branch7x7, branch7x7dbl, branch_pool])
           end_points['mixed_17x17x768b'] = net
+        '''
         # mixed_5: 17 x 17 x 768.
         with tf.variable_scope('mixed_17x17x768c'):
           with tf.variable_scope('branch1x1'):
@@ -207,6 +212,7 @@ def inception_v3(inputs,
             branch_pool = ops.conv2d(branch_pool, 192, [1, 1])
           net = tf.concat(3, [branch1x1, branch7x7, branch7x7dbl, branch_pool])
           end_points['mixed_17x17x768c'] = net
+
         # mixed_6: 17 x 17 x 768.
         with tf.variable_scope('mixed_17x17x768d'):
           with tf.variable_scope('branch1x1'):
@@ -226,6 +232,7 @@ def inception_v3(inputs,
             branch_pool = ops.conv2d(branch_pool, 192, [1, 1])
           net = tf.concat(3, [branch1x1, branch7x7, branch7x7dbl, branch_pool])
           end_points['mixed_17x17x768d'] = net
+
         # mixed_7: 17 x 17 x 768.
         with tf.variable_scope('mixed_17x17x768e'):
           with tf.variable_scope('branch1x1'):
@@ -245,8 +252,9 @@ def inception_v3(inputs,
             branch_pool = ops.conv2d(branch_pool, 192, [1, 1])
           net = tf.concat(3, [branch1x1, branch7x7, branch7x7dbl, branch_pool])
           end_points['mixed_17x17x768e'] = net
+        '''
         # Auxiliary Head logits
-        aux_logits = tf.identity(end_points['mixed_17x17x768e'])
+        aux_logits = tf.identity(end_points['mixed_17x17x768b'])
         with tf.variable_scope('aux_logits'):
           aux_logits = ops.avg_pool(aux_logits, [5, 5], stride=3,
                                     padding='VALID')
