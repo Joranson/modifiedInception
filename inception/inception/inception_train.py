@@ -36,7 +36,7 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('train_dir', '/tmp/imagenet_train',
                            """Directory where to write event logs """
                            """and checkpoint.""")
-tf.app.flags.DEFINE_integer('max_steps', 10000000,
+tf.app.flags.DEFINE_integer('max_steps', 30,
                             """Number of batches to run.""")
 tf.app.flags.DEFINE_string('subset', 'train',
                            """Either 'train' or 'validation'.""")
@@ -340,7 +340,14 @@ def train(dataset):
       
       start_time = time.time()
       _, loss_value = sess.run([train_op, loss], options=run_options, run_metadata=run_metadata)
+      
       duration = time.time() - start_time
+
+      # Create the Timeline object, and write it to a json
+      tl = timeline.Timeline(run_metadata.step_stats)
+      ctf = tl.generate_chrome_trace_format()
+      with open('timeline_'+str(step)+'.json', 'w') as f:
+          f.write(ctf)
 
       assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
 

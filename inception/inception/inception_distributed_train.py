@@ -289,13 +289,13 @@ def train(target, dataset, cluster_spec):
             sess.run(clean_up_op)
             raise
 
+          duration = time.time() - start_time
+          
           # Create the Timeline object, and write it to a json
           tl = timeline.Timeline(run_metadata.step_stats)
           ctf = tl.generate_chrome_trace_format()
           with open('timeline_'+str(step)+'.json', 'w') as f:
               f.write(ctf)
-
-          duration = time.time() - start_time
 
           if step % 1 == 0:
             examples_per_sec = FLAGS.batch_size / float(duration)
