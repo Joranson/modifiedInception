@@ -334,8 +334,12 @@ def train(dataset):
         graph_def=sess.graph.as_graph_def(add_shapes=True))
 
     for step in xrange(FLAGS.max_steps):
+      # Run the graph with full trace option
+      run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+      run_metadata = tf.RunMetadata()
+      
       start_time = time.time()
-      _, loss_value = sess.run([train_op, loss])
+      _, loss_value = sess.run([train_op, loss], options=run_options, run_metadata=run_metadata)
       duration = time.time() - start_time
 
       assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
