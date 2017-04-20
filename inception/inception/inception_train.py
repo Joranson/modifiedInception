@@ -24,6 +24,8 @@ import os.path
 import re
 import time
 
+from tensorflow.python.client import timeline
+
 import numpy as np
 import tensorflow as tf
 
@@ -351,7 +353,7 @@ def train(dataset):
 
       assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
 
-      if step % 10 == 0:
+      if step % 1 == 0:
         examples_per_sec = FLAGS.batch_size / float(duration)
         format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
                       'sec/batch)')
