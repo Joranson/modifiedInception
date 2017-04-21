@@ -290,11 +290,11 @@ def train(target, dataset, cluster_spec):
             raise
 
           duration = time.time() - start_time
-          
+
           # Create the Timeline object, and write it to a json
           tl = timeline.Timeline(run_metadata.step_stats)
           ctf = tl.generate_chrome_trace_format()
-          with open('timeline_'+str(step)+'.json', 'w') as f:
+          with open('timeline_id-'+str(FLAGS.task_id) + '_step-' + str(step)+'.json', 'w') as f:
               f.write(ctf)
 
           if step % 1 == 0:
