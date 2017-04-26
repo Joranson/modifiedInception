@@ -286,8 +286,7 @@ def train(target, dataset, cluster_spec):
           assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
           if step > FLAGS.max_steps and is_chief:
             tf.logging.info('Achieve maximum steps. About to execute sync_clean_up_op!')
-            sess.run(clean_up_op)
-            raise
+            break
 
           duration = time.time() - start_time
 
