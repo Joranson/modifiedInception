@@ -284,7 +284,7 @@ def train(target, dataset, cluster_spec):
           loss_value, step = sess.run([train_op, global_step], options=run_options, run_metadata=run_metadata)
 
           assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
-          if step > FLAGS.max_steps and is_chief:
+          if step > FLAGS.max_steps:
             tf.logging.info('Achieve maximum steps. About to execute sync_clean_up_op!')
             break
 
